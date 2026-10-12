@@ -165,7 +165,12 @@ export function DeckViewer({ url }: { url: string }) {
           import.meta.url,
         ).toString();
 
-        loading = pdfjs.getDocument({ url });
+        /* Only the bytes of the pages actually drawn. Left to its defaults
+           pdf.js streams the whole file in the background, and the viewer opens
+           with the project page, so every visit pulled up to twenty megabytes
+           out of storage for a reader who looked at the first slide. A server
+           that refuses ranges still gets the whole file, as before. */
+        loading = pdfjs.getDocument({ url, disableAutoFetch: true, disableStream: true });
         const loaded = await loading.promise;
 
         if (!alive) {

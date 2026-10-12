@@ -1,8 +1,9 @@
+import { unstable_cache } from "next/cache";
 import { db } from "./chain";
 import { lumenPrice } from "./money";
 import { readPages, summarize, type AnalyticsRows } from "./statistics";
 
-export async function loadStatistics(scope: string) {
+async function readStatistics(scope: string) {
   const client = db;
   if (client === null) throw new Error("Statistics database is not configured");
   async function read<K extends keyof AnalyticsRows>(key: K, table: string, columns: string, order: string[]) {
@@ -33,3 +34,15 @@ export async function loadStatistics(scope: string) {
   ]);
   return summarize({ hackathons, states, participants, profiles, links, approvals, submissions, payments }, scope, new Date(), lumen);
 }
+
+/*
+  Five minutes old at most, and read at most once in those five minutes.
+
+  Every view used to page through nine whole tables, the only read in the
+  product that grows with everything ever recorded rather than with one event,
+  and on a free tier that is the line that runs out first. Nothing on this page
+  is anybody's own data, it already reads as the anonymous role, and a count
+  five minutes behind the chain is still the right count; `updatedAt` on the
+  page says how old it is.
+*/
+export const loadStatistics = unstable_cache(readStatistics, ["statistics"], { revalidate: 300 });
