@@ -43,12 +43,21 @@ export function SpecLabel({
 export function SpecHeading({
   children,
   className,
+  large = false,
 }: {
   children: ReactNode;
   className?: string;
+  /** The page's own title, set at the size of an `h1`. */
+  large?: boolean;
 }) {
   return (
-    <h2 className={join("technical text-[clamp(1.5rem,3vw,2.25rem)]", className)}>
+    <h2
+      className={join(
+        "technical",
+        large ? "text-[clamp(2rem,4.5vw,3rem)]" : "text-[clamp(1.5rem,3vw,2.25rem)]",
+        className,
+      )}
+    >
       {children}
     </h2>
   );

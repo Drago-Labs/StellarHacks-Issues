@@ -282,13 +282,7 @@ export function SubmitForm({
        layout that lost its other half. */
     <Measure wide className="py-12">
       <div className="mx-auto max-w-[46rem]">
-        <SpecHeading>What you built</SpecHeading>
-
-        <p className="mt-5 text-[1rem] leading-relaxed text-ink-soft">
-          The chain records a digest of this and the repository link. Everything
-          else is how judges and visitors will read it, and you can change any of
-          it until submissions close.
-        </p>
+        <SpecHeading large>What you built</SpecHeading>
 
         <div className="mt-12 grid gap-6">
           <Part number={1} title="Introduction">
