@@ -206,6 +206,16 @@ export function Console({
      because a stranger may be looking at a hackathon that is not open yet. */
   const live = state.phase >= 2;
 
+  /* A window still running, which moves on by itself when it closes. The
+     parent rereads the contract once it has, so reading the clock here at
+     render is enough to bring the stage card back in time. */
+  const waiting = waitsFor(state.phase, rules);
+  const idle = live && waiting !== null && Math.floor(Date.now() / 1000) < waiting;
+
+  /* The organizer's other hat, when the rules also name them a judge. */
+  const judgeToo =
+    state.phase === 4 && wallet !== null && (rules?.judgeAddresses ?? []).includes(wallet.address);
+
   /* The ticker the prize is denominated in, so every amount on this page says
      what it is an amount of. Empty rather than guessed when the asset is not
      one we know: a wrong ticker beside a real balance is worse than none. */
@@ -358,6 +368,8 @@ export function Console({
                 {rules.judges === 1 ? "One judge" : `${rules.judges} judges`}
               </Fact>
 
+              <Fact name="Applications">{applicants === null ? "…" : applicants.length}</Fact>
+
               <Fact name="Sign-ups close">
                 <Moment at={rules.schedule.registrationCloses} />
               </Fact>
@@ -373,6 +385,10 @@ export function Console({
           </Card>
         )}
 
+        {/* Only when there is something to do. While a window runs and the
+            phase moves on by itself, the facts above already say everything
+            this card used to repeat in prose. */}
+        {!(idle && !judgeToo) && (
         <Card>
         <h2 className="text-[1.75rem] font-semibold text-ink">
           {headline(state, funded)}
@@ -399,7 +415,6 @@ export function Console({
             <Next
               running={state}
               rules={rules}
-              applications={applicants?.length ?? null}
               contractId={contractId}
               address={wallet?.address ?? null}
               sealed={sealed}
@@ -422,9 +437,7 @@ export function Console({
           refuses cards anyway, and a link to a room that turns somebody away is
           worse than no link.
         */}
-        {state.phase === 4 &&
-          wallet !== null &&
-          (rules?.judgeAddresses ?? []).includes(wallet.address) && (
+        {judgeToo && (
             <div className="mt-7 flex flex-wrap items-center gap-5 border-t border-rule pt-7">
               <ButtonLink href={`/judge/${contractId}`}>Score the projects</ButtonLink>
 
@@ -435,6 +448,7 @@ export function Console({
             </div>
           )}
       </Card>
+        )}
 
         </Overview>
       )}
@@ -455,24 +469,6 @@ export function Console({
 
     </div>
   );
-}
-
-/**
- * What is still running, said as the thing it is rather than as "this stage".
- *
- * A disabled button with a date beside it reads as a fault. What it is is a
- * window somebody else is still inside: teams are still entering, or the
- * judges are still scoring, and moving on would cut them off.
- */
-function holding(phase: number): string {
-  switch (phase) {
-    case 2:
-      return "Teams can still enter";
-    case 3:
-      return "You can check the entries";
-    default:
-      return "Judges can still score";
-  }
 }
 
 /**
@@ -851,7 +847,6 @@ function Move({
 function Next({
   running,
   rules,
-  applications,
   contractId,
   address,
   sealed,
@@ -861,8 +856,6 @@ function Next({
   running: Running & { phase: number };
   /** The frozen rules, for the deadline this stage is waiting on. */
   rules: Rules | null;
-  /** How many have applied, or null while it is still being counted. */
-  applications: number | null;
   contractId: string;
   /** The connected wallet, which is what decides whether a move is offered. */
   address: string | null;
@@ -980,30 +973,7 @@ function Next({
       here was never the job.
     */
     if (waiting !== null && now < waiting) {
-      return (
-        <div className="grid gap-3">
-          {/* What is in the queue, before the clock. An organizer opening this
-              while sign-ups run is asking whether anybody came, and a card that
-              opened with a deadline answered a question they had not asked. */}
-          {running.phase === 2 && (
-            <p className="text-[1.125rem] text-ink">
-              {applications === null
-                ? "Counting who has applied."
-                : applications === 0
-                  ? "Nobody has applied yet."
-                  : applications === 1
-                    ? "One application."
-                    : `${applications} applications.`}
-            </p>
-          )}
-
-          <p className="max-w-[40rem] text-[1rem] leading-relaxed text-ink-soft">
-            {holding(running.phase)} until <Moment at={waiting} />,{" "}
-            {left(waiting - now)} from now. It moves on by itself at that point,
-            so you do not have to be here for it.
-          </p>
-        </div>
-      );
+      return null;
     }
 
     /*
