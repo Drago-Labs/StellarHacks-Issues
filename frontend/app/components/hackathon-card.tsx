@@ -26,7 +26,14 @@ import { howLong } from "../../lib/schedule";
  * even and as nothing at all when they are not.
  */
 
-export async function HackathonCard({ hackathon }: { hackathon: HackathonSummary }) {
+export async function HackathonCard({
+  hackathon,
+  href = `/hackathons/${hackathon.slug}`,
+}: {
+  hackathon: HackathonSummary;
+  /** Where the card leads. The Management Panel sends it to the event's console. */
+  href?: string;
+}) {
   /* The constitution's total is only the starting pool. Every top-up is stored
      by the contract, so the number on the card includes those contributions
      instead of continuing to advertise the amount from opening day. */
@@ -85,7 +92,7 @@ export async function HackathonCard({ hackathon }: { hackathon: HackathonSummary
           the card lands after the split. An overlay keeps the entire surface
           clickable and leaves the sponsor link free to sit above it. */}
       <Link
-        href={`/hackathons/${hackathon.slug}`}
+        href={href}
         className="absolute inset-0 z-10"
         aria-label={hackathon.name}
       />

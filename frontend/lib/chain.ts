@@ -104,6 +104,8 @@ export interface Filter {
   q?: string | undefined;
   /** How many to read the chain for. */
   limit?: number | undefined;
+  /** Only the hackathons this address created, for the Management Panel. */
+  organizer?: string | undefined;
 }
 
 /**
@@ -146,7 +148,12 @@ export async function listHackathons(filter: Filter = {}): Promise<HackathonSumm
           ? answer
           : db.from("hackathons").select(columns).order("created_at", { ascending: false }),
       ),
-    db.from("hackathon_state").select("contract_id, phase, visibility"),
+    filter.organizer === undefined
+      ? db.from("hackathon_state").select("contract_id, phase, visibility")
+      : db
+          .from("hackathon_state")
+          .select("contract_id, phase, visibility")
+          .eq("organizer", filter.organizer),
   ]);
 
   if (written.error !== null) {
@@ -155,9 +162,11 @@ export async function listHackathons(filter: Filter = {}): Promise<HackathonSumm
 
   const byContract = new Map((chain.data ?? []).map((row) => [String(row.contract_id), row]));
 
-  const all = (written.data ?? []).map((row) =>
-    merge(row, byContract.get(String(row.contract_id)) ?? {}),
-  );
+  const all = (written.data ?? [])
+    /* Narrowed to the organizer's own when asked, by the state the indexer
+       read off the chain rather than by anything typed beside it. */
+    .filter((row) => filter.organizer === undefined || byContract.has(String(row.contract_id)))
+    .map((row) => merge(row, byContract.get(String(row.contract_id)) ?? {}));
 
   /*
     Narrowed and ordered before the chain is asked anything, so a filtered page

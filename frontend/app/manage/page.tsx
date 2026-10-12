@@ -1,5 +1,7 @@
 import { ButtonLink, Eyebrow, Measure } from "../components/primitives";
+import { HackathonCard } from "../components/hackathon-card";
 import { Mine } from "./mine";
+import { listHackathons } from "../../lib/chain";
 import { currentUser, serverClient } from "../../lib/supabase/server";
 import { mayOrganize } from "../../lib/organizing";
 
@@ -13,14 +15,31 @@ import { mayOrganize } from "../../lib/organizing";
  * about the organizer.
  *
  * The grant only decides whether the button to start another one is offered.
+ *
+ * The events are drawn as the same cards the public list uses, so an organizer
+ * picks theirs out by the banner they chose. Which wallet is connected is only
+ * known in the browser, so `Mine` writes it into the address and this renders
+ * the cards for it; an address is public on chain, so nothing is exposed.
  */
 
 export const dynamic = "force-dynamic";
 
-export default async function Manage() {
+/** Enough for any one organizer; the public list pages at twelve. */
+const ALL_OF_THEM = 60;
+
+export default async function Manage({ searchParams }: PageProps<"/manage">) {
+  const asked = await searchParams;
+  const named = asked["organizer"];
+  const organizer =
+    typeof named === "string" && /^G[A-Z2-7]{55}$/.test(named) ? named : null;
+
   const user = await currentUser();
   const db = user === null ? null : await serverClient();
-  const allowed = db === null ? false : await mayOrganize(db);
+
+  const [allowed, hackathons] = await Promise.all([
+    db === null ? false : mayOrganize(db),
+    organizer === null ? [] : listHackathons({ organizer, limit: ALL_OF_THEM }).catch(() => []),
+  ]);
 
   return (
     <main className="flex-1">
@@ -40,8 +59,20 @@ export default async function Manage() {
         </Measure>
       </section>
 
-      <Measure className="py-16">
-        <Mine />
+      <Measure wide className="py-16">
+        <Mine organizer={organizer} described={hackathons.map((h) => h.contract_id)}>
+          {hackathons.length > 0 && (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {hackathons.map((hackathon) => (
+                <HackathonCard
+                  key={hackathon.contract_id}
+                  hackathon={hackathon}
+                  href={`/manage/${hackathon.contract_id}`}
+                />
+              ))}
+            </div>
+          )}
+        </Mine>
       </Measure>
     </main>
   );
