@@ -37,6 +37,9 @@ import { titleOf } from "../../../../lib/words";
  * outcome, we hold what describes it.
  */
 
+/** The column's own limit. Long enough for an architecture, short enough to be read. */
+const OVERVIEW_LIMIT = 2000;
+
 export function SubmitForm({
   contractId,
   slug,
@@ -76,6 +79,7 @@ export function SubmitForm({
   const [summary, setSummary] = useState("");
   const [deployed, setDeployed] = useState("");
   const [about, setAbout] = useState("");
+  const [overview, setOverview] = useState("");
   const [logo, setLogo] = useState("");
   const [banner, setBanner] = useState("");
   const [deck, setDeck] = useState("");
@@ -133,6 +137,7 @@ export function SubmitForm({
           title: title.trim(),
           summary: summary.trim(),
           description: about.trim(),
+          technical_overview: overview.trim(),
           contract_address: deployed.trim(),
           logo_url: logo,
           banner_url: banner,
@@ -352,6 +357,34 @@ export function SubmitForm({
                 onChange={(event) => setAbout(event.target.value.slice(0, 20_000))}
                 rows={12}
                 placeholder="What problem it solves, how it works, what you would do next."
+                className="rounded-[0.625rem] bg-paper p-4 text-[1.0625rem] leading-relaxed text-ink ring-1 ring-inset ring-rule outline-none transition-shadow duration-150 ease-settle focus:ring-2 focus:ring-ink"
+              />
+            </label>
+
+            {/* Kept apart from the description because it answers a different
+                question. The description sells the idea; this says what was
+                actually built, and it is what a judge and the AI review read
+                to tell a working project from a well written one. */}
+            <label className="grid gap-2">
+              <span className="flex items-baseline justify-between gap-4">
+                <span className="text-[1rem] font-semibold text-ink">Technical overview</span>
+                <span className="tabular text-[0.8125rem] text-ink-faint">
+                  {overview.length} / {OVERVIEW_LIMIT}
+                </span>
+              </span>
+
+              <span className="text-[0.9375rem] leading-relaxed text-ink-soft">
+                How it works under the hood: the architecture, what runs on chain and
+                what does not, the contracts and their main functions, and what is
+                finished versus planned. Point to files in the repository where you
+                can. Claims that the repository does not back up count for little.
+              </span>
+
+              <textarea
+                value={overview}
+                onChange={(event) => setOverview(event.target.value.slice(0, OVERVIEW_LIMIT))}
+                rows={8}
+                placeholder="A Soroban contract in contracts/split holds the funds and pays out on release(). The Next.js app in web/ builds the transactions…"
                 className="rounded-[0.625rem] bg-paper p-4 text-[1.0625rem] leading-relaxed text-ink ring-1 ring-inset ring-rule outline-none transition-shadow duration-150 ease-settle focus:ring-2 focus:ring-ink"
               />
             </label>

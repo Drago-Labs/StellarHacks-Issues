@@ -12,7 +12,7 @@ uses it, not to whichever directory is convenient.
 | Path | Layer |
 |---|---|
 | `contracts/` | Soroban contracts, Rust |
-| `backend/` | `supabase/` schema and role tests, and the long lived services: `indexer/`, `sealer/`, `clock/` |
+| `backend/` | `supabase/` schema and role tests, and the long lived services: `indexer/`, `sealer/`, `clock/`, `reviewer/` |
 | `frontend/` | The web application, from M15 |
 | `sdk/` | TypeScript, shared by backend and frontend |
 | `fixtures/` | Test vectors read by Rust and TypeScript together |

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { currentUser } from "../../../lib/supabase/server";
 import { signedByOrganizer } from "../../../lib/organizer";
+import { phaseOf } from "../../../lib/running";
 
 /**
  * Everything about a project that the chain does not hold.
@@ -30,6 +31,7 @@ interface Body {
   title: string;
   summary?: string;
   description?: string;
+  technical_overview?: string;
   logo_url?: string;
   banner_url?: string;
   pitch_deck_url?: string;
@@ -98,12 +100,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "not on this team" }, { status: 403 });
   }
 
+  /* Nothing changes once submissions close. The judges and the AI review read
+     this row after the deadline, and a write up that could still be edited
+     then would let a team answer the review instead of the brief. The phase is
+     the contract's, asked here rather than trusted from the page, and a
+     contract that cannot be read is not taken as permission. */
+  const phase = await phaseOf(body.contract);
+
+  if (phase === null || phase > OPEN) {
+    return NextResponse.json(
+      { error: "submissions have closed, so the project can no longer be edited" },
+      { status: 409 },
+    );
+  }
+
   const row = {
     contract_id: body.contract,
     team_id: Number(body.teamId),
     title,
     summary: text(body.summary),
     description: text(body.description),
+    technical_overview: bounded(body.technical_overview, 2000),
     logo_url: text(body.logo_url),
     banner_url: text(body.banner_url),
     pitch_deck_url: text(body.pitch_deck_url),
@@ -160,7 +177,11 @@ export async function POST(request: Request) {
   return NextResponse.json({ error: failure.slice(0, 200) }, { status: 502 });
 }
 
+/** The phase in which entries are made, numbered as the contract numbers it. */
+const OPEN = 2;
+
 const OPTIONAL_PRESENTATION_COLUMNS = new Set([
+  "technical_overview",
   "banner_url",
   "pitch_deck_url",
   "contract_address",
@@ -178,6 +199,14 @@ function missingOptionalColumn(message: string): string | null {
   }
 
   return null;
+}
+
+/** Text held to the column's own limit, so a long overview is cut here rather
+    than refused by the database along with everything saved beside it. */
+function bounded(value: unknown, limit: number): string | null {
+  const kept = text(value);
+
+  return kept === null ? null : kept.slice(0, limit);
 }
 
 function text(value: unknown): string | null {

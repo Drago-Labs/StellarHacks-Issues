@@ -90,13 +90,26 @@ if (set("CLOCK_SECRET_KEY")) {
   console.log("clock: not started, CLOCK_SECRET_KEY is not set. Phases wait to be moved by hand.");
 }
 
+/*
+  The reviewer is optional in the same way.
+
+  It needs a model key and a GitHub token, and an event that never asks for an
+  AI review loses nothing without it. A run somebody requests while it is not
+  running waits in the queue and starts when it does.
+*/
+if (set("GITHUB_TOKEN") && (set("ANTHROPIC_API_KEY") || set("ANTHROPIC_AUTH_TOKEN"))) {
+  services.push({ name: "reviewer", args: ["start", "--prefix", "reviewer"] });
+} else {
+  console.log("reviewer: not started, GITHUB_TOKEN or ANTHROPIC_API_KEY is not set. Requested reviews wait in the queue.");
+}
+
 const running = services.map(({ name, args }) => {
   const child = spawn("npm", args, { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
 
   const tag = (stream) => (chunk) => {
     for (const line of String(chunk).split("\n")) {
       if (line.trim().length > 0) {
-        stream.write(`${name.padEnd(7)} │ ${line}\n`);
+        stream.write(`${name.padEnd(8)} │ ${line}\n`);
       }
     }
   };

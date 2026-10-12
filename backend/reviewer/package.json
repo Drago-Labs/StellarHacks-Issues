@@ -1,0 +1,25 @@
+{
+  "name": "@stelhacks/reviewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reads every submission once, so judges start from an ordered list with a reason for every number in it",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@stellar/stellar-sdk": "^14.5.0",
+    "@stelhacks/sdk": "file:../../sdk",
+    "@supabase/supabase-js": "^2.47.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.8"
+  }
+}

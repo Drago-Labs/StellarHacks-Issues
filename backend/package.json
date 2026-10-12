@@ -8,7 +8,8 @@
     "dev": "node run.mjs",
     "dev:indexer": "npm start --prefix indexer --",
     "dev:sealer": "npm start --prefix sealer",
-    "dev:clock": "npm start --prefix clock"
+    "dev:clock": "npm start --prefix clock",
+    "dev:reviewer": "npm start --prefix reviewer"
   },
   "devDependencies": {
     "dotenv": "^16.4.7"
