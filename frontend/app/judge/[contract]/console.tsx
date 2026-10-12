@@ -171,20 +171,19 @@ export function JudgeConsole({ contractId }: { contractId: string }) {
             )}
           </>
         ) : (
-          "Scoring is over for this hackathon. The cards have been handed in and the reveal opens them all at once."
+          "Scoring is over. The results are announced at the reveal."
         )}
       </Standing>
     ) : phase > 4 ? (
       <div className="space-y-8">
-        <Standing phase={phase}>Scoring is over for this hackathon.</Standing>
+        <Standing phase={phase}>The results are announced at the reveal.</Standing>
         {board}
       </div>
     ) : (
       <div className="space-y-8">
         {scoreable.length === 0 ? (
           <p className="max-w-[38rem] text-[1rem] leading-relaxed text-ink-soft">
-            Nothing to score. Either no project was entered or every one was struck
-            out in screening.
+            No projects to score.
           </p>
         ) : (
           <>
@@ -280,12 +279,12 @@ function Ways({
     {
       key: "manual" as const,
       title: "Manual review",
-      body: "Open each project and score it yourself against the rubric.",
+      body: "Open each project and score it yourself on each criterion.",
     },
     {
       key: "ai" as const,
       title: "AI review",
-      body: "The AI reads every project first and ranks it against the same rubric. You decide what to look at and what it is worth.",
+      body: "The AI reads every project first and ranks them on the same criteria. You still decide each score.",
     },
   ];
 
@@ -396,7 +395,9 @@ function Standing({ phase, children }: { phase: number | null; children: React.R
   return (
     <div className="rounded-[1.25rem] bg-paper p-8 ring-1 ring-rule sm:p-10">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <p className="text-[1.25rem] font-semibold text-ink">Nothing to score yet</p>
+        <p className="text-[1.25rem] font-semibold text-ink">
+          {phase !== null && phase > 4 ? "Scoring is over" : "Nothing to score yet"}
+        </p>
 
         <p className="label text-ink-faint">{phaseName(phase)}</p>
       </div>
@@ -680,7 +681,7 @@ function Scoresheet({
                 disabled={busy || !filled || judge === null}
                 onClick={() => void submit()}
               >
-                {busy ? "Signing" : "Seal this card"}
+                {busy ? "Confirm in your wallet" : "Submit score"}
               </Button>
 
               {/* Only the button waits on the wallet, and it says why rather
@@ -688,7 +689,7 @@ function Scoresheet({
               {judge === null && (
                 <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
                   {ready
-                    ? "Connect the wallet the rules name as a judge. A card signed by any other key is refused."
+                    ? "Connect your judge wallet to submit."
                     : "Checking your wallet"}
                 </p>
               )}
@@ -702,7 +703,7 @@ function Scoresheet({
           <div>
             <p className="label flex items-center gap-2 text-verified">
               <span aria-hidden className="size-1.5 rounded-full bg-verified" />
-              Card sealed
+              Score submitted
             </p>
 
             <div className="mt-3 border-t border-rule">
@@ -731,7 +732,7 @@ function Scoresheet({
             </p>
 
             <p className="mt-3 max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft">
-              Signed and handed in. It stays sealed until the reveal.
+              Hidden from everyone until the results are announced.
             </p>
 
             <Kept contractId={contractId} held={held} />
@@ -774,7 +775,7 @@ function Kept({ contractId, held }: { contractId: string; held: SealedCard }) {
         onClick={() => setShown(true)}
         className="mt-5 text-[0.875rem] text-ink-faint underline-offset-4 transition-colors hover:text-ink-soft hover:underline"
       >
-        Show the receipt
+        Proof of submission
       </button>
     );
   }
@@ -786,19 +787,19 @@ function Kept({ contractId, held }: { contractId: string; held: SealedCard }) {
   return (
     <div className="mt-5 border-t border-rule pt-4">
       <SpecRows>
-        <SpecRow index="1" label="Leaf" mark>
+        <SpecRow index="1" label="Score fingerprint" mark>
           <SpecValue>{held.leaf}</SpecValue>
         </SpecRow>
 
-        <SpecRow index="2" label="Receipt from">
+        <SpecRow index="2" label="Received by">
           <SpecValue>{held.receipt.sealer}</SpecValue>
         </SpecRow>
 
-        <SpecRow index="3" label="Signature">
+        <SpecRow index="3" label="Confirmation">
           <SpecValue>{held.receipt.signature}</SpecValue>
         </SpecRow>
 
-        <SpecRow index="4" label="Included" mark={included?.at === "omitted"}>
+        <SpecRow index="4" label="Counted" mark={included?.at === "omitted"}>
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <span className={`label ${tone(included)}`}>
@@ -806,21 +807,21 @@ function Kept({ contractId, held }: { contractId: string; held: SealedCard }) {
               </span>
 
               <Button size="sm" intent="quiet" disabled={checking} onClick={() => void check()}>
-                {checking ? "Checking" : "Check"}
+                {checking ? "Checking" : "Check now"}
               </Button>
             </div>
 
             {included?.at === "disagrees" && (
               <p className="max-w-[34rem] text-[0.875rem] leading-relaxed text-broken">
-                The service proved your card against a tree whose root is not
-                the one on chain. Keep this receipt.
+                Your score does not match what was published. Keep this proof
+                and tell the organizer.
               </p>
             )}
 
             {included?.at === "omitted" && (
               <p className="max-w-[34rem] text-[0.875rem] leading-relaxed text-broken">
-                Cards are held for this hackathon and yours is not among them.
-                This is what the receipt is for.
+                Your score is missing from the published results. Keep this
+                proof and tell the organizer.
               </p>
             )}
           </div>
@@ -835,7 +836,7 @@ function Kept({ contractId, held }: { contractId: string; held: SealedCard }) {
           }}
           className="text-[0.875rem] text-ink-faint underline-offset-4 transition-colors hover:text-ink-soft hover:underline"
         >
-          {copied ? "Copied" : "Copy the receipt"}
+          {copied ? "Copied" : "Copy proof"}
         </button>
 
         <button
@@ -848,8 +849,7 @@ function Kept({ contractId, held }: { contractId: string; held: SealedCard }) {
       </div>
 
       <p className="mt-4 max-w-[34rem] text-[0.875rem] leading-relaxed text-ink-faint">
-        Once the root is published this proves your card was in the tree, and if
-        it was not, this is what says it should have been.
+        Once the results are published, this shows your score was counted.
       </p>
     </div>
   );
@@ -935,18 +935,18 @@ function figure(value: number): string {
  */
 function verdict(found: Inclusion | null): string {
   if (found === null) {
-    return "not checked";
+    return "not checked yet";
   }
 
   switch (found.at) {
     case "included":
-      return "proved";
+      return "yes, counted";
     case "omitted":
-      return "not in the tree";
+      return "missing";
     case "disagrees":
-      return "root does not match";
+      return "does not match";
     case "waiting":
-      return "nothing sealed yet";
+      return "results not published yet";
     case "unreachable":
       return found.why;
   }
