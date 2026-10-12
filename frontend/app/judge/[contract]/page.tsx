@@ -25,17 +25,11 @@ export default async function Judge({ params }: PageProps<"/judge/[contract]">) 
   return (
     <main className="flex-1">
       <div className="mx-auto w-full max-w-[60rem] px-6 py-10 sm:py-12">
-        <p className="label text-[0.8125rem] tracking-[0.16em] text-ink-faint">Judge</p>
+        <p className="label text-[0.8125rem] tracking-[0.16em] text-ink-faint">Judging Panel</p>
 
         <h1 className="mt-2 text-[clamp(1.75rem,3.5vw,2.5rem)]">
           {written?.name ?? "Scoring"}
         </h1>
-
-        <p className="mt-4 max-w-[40rem] text-[1rem] leading-relaxed text-ink-soft">
-          One card per project, signed once. Nothing goes on chain and nothing
-          costs you a fee; the cards stay sealed until the reveal opens them all
-          at once.
-        </p>
       </div>
 
       <div className="mx-auto w-full max-w-[60rem] px-6 pb-24">

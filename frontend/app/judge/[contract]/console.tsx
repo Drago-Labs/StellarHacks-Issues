@@ -126,11 +126,30 @@ export function JudgeConsole({ contractId }: { contractId: string }) {
   const sealed = scoreable.filter((entry) => held[entry.team] !== undefined).length;
   const shown = focus === null ? scoreable : scoreable.filter((entry) => focus.has(entry.team));
 
+  /* This judge's own cards, highest first. Read from what the browser kept of
+     each signed card, so it is only ever this judge's marks: everybody's cards
+     stay sealed until the reveal, and the combined ranking is the contract's. */
+  const board = (
+    <Scoreboard
+      rows={scoreable
+        .filter((entry) => held[entry.team] !== undefined)
+        .map((entry) => ({
+          team: entry.team,
+          track: entry.track,
+          card: cards[entry.team],
+          total: (rubric.find((track) => track.track === entry.track)?.criteria ?? []).reduce(
+            (sum, criterion) => sum + (held[entry.team]?.marks?.[criterion.id] ?? 0),
+            0,
+          ),
+        }))}
+    />
+  );
+
   /* Cards are only collected while the judging window is open. Outside it the
      service refuses them, so the page says when the window is rather than
      offering a form that cannot be handed in. */
   const manual =
-    phase !== 4 ? (
+    phase === null || phase < 4 ? (
       <Standing phase={phase}>
         {phase !== null && phase < 4 ? (
           <>
@@ -154,40 +173,13 @@ export function JudgeConsole({ contractId }: { contractId: string }) {
           "Scoring is over for this hackathon. The cards have been handed in and the reveal opens them all at once."
         )}
       </Standing>
+    ) : phase > 4 ? (
+      <div className="space-y-8">
+        <Standing phase={phase}>Scoring is over for this hackathon.</Standing>
+        {board}
+      </div>
     ) : (
       <div className="space-y-8">
-        {/* The deadline, at the top and not in an email. A judge who does not
-            know when their window shuts is a judge who finds out by being
-            refused. */}
-        <div className="rounded-[1.25rem] bg-paper p-6 ring-1 ring-rule sm:p-8">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-            {/* Counted rather than listed as work outstanding. A judge who has
-                handed in every card was still being told how many there were to
-                score, which is the same sentence they were shown before they
-                started. */}
-            <p className="text-[1.25rem] font-semibold text-ink">
-              {sealed === 0
-                ? scoreable.length === 1
-                  ? "One project to score"
-                  : `${scoreable.length} projects to score`
-                : sealed === scoreable.length
-                  ? scoreable.length === 1
-                    ? "Your card is in"
-                    : "Every card is in"
-                  : `${sealed} of ${scoreable.length} scored`}
-            </p>
-
-            <p className="label text-ink-faint">{phaseName(phase)}</p>
-          </div>
-
-          {rules !== null && rules.schedule.judgingCloses > 0 && (
-            <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-soft">
-              Cards are collected until <Moment at={rules.schedule.judgingCloses} />.
-              After that the service refuses them.
-            </p>
-          )}
-        </div>
-
         {scoreable.length === 0 ? (
           <p className="max-w-[38rem] text-[1rem] leading-relaxed text-ink-soft">
             Nothing to score. Either no project was entered or every one was struck
@@ -232,6 +224,8 @@ export function JudgeConsole({ contractId }: { contractId: string }) {
         {refused !== null && (
           <p className="max-w-[46rem] text-[0.9375rem] leading-relaxed text-broken">{refused}</p>
         )}
+
+        {scoreable.length > 0 && sealed === scoreable.length && board}
       </div>
     );
 
@@ -340,6 +334,63 @@ function Ways({
  * phase is named beside it for the same reason the organizer's panel names it:
  * it is the one fact that explains every other thing on the screen.
  */
+/**
+ * The judge's own cards as a table, highest total first.
+ *
+ * Only what this browser signed. The scores everybody handed in are sealed
+ * until the reveal, so a combined table here would be either empty or a leak;
+ * the ranking that decides anything is on the results page once it opens.
+ */
+function Scoreboard({
+  rows,
+}: {
+  rows: { team: number; track: string; card: Card | undefined; total: number }[];
+}) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const ranked = [...rows].sort((a, b) => b.total - a.total || a.team - b.team);
+
+  return (
+    <section className="rounded-[1.25rem] bg-paper p-6 ring-1 ring-rule sm:p-8">
+      <h2 className="text-[1.5rem] font-semibold text-ink">Your scores</h2>
+
+      <ol className="mt-5 border-t border-rule">
+        {ranked.map((row, at) => (
+          <li key={row.team} className="flex items-center gap-4 border-b border-rule py-3.5">
+            <span className="tabular w-7 shrink-0 text-[1rem] font-semibold text-ink-faint">
+              {at + 1}
+            </span>
+
+            {row.card?.logoUrl ? (
+              <img
+                src={row.card.logoUrl}
+                alt=""
+                className="size-9 shrink-0 rounded-[0.4rem] object-cover ring-1 ring-rule"
+              />
+            ) : (
+              <span aria-hidden className="size-9 shrink-0 rounded-[0.4rem] bg-paper-sunk ring-1 ring-rule" />
+            )}
+
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[1rem] font-semibold text-ink">
+                {row.card?.title ?? row.card?.teamName ?? `Team ${row.team}`}
+              </span>
+              <span className="label text-[0.75rem] text-ink-faint">{titleOf(row.track)}</span>
+            </span>
+
+            <span className="tabular shrink-0 text-[1.125rem] font-semibold text-ink">
+              {figure(row.total)}
+              <span className="text-[0.875rem] font-normal text-ink-faint"> / 100</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function Standing({ phase, children }: { phase: number | null; children: React.ReactNode }) {
   return (
     <div className="rounded-[1.25rem] bg-paper p-8 ring-1 ring-rule sm:p-10">
