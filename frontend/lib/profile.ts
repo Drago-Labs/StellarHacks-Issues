@@ -190,9 +190,9 @@ export function nameOf(profile: Profile | null, fromProvider: string | null): st
  * The picture the sign in provider handed over, for somebody who has not
  * uploaded one. Google sends it as `avatar_url` and also as `picture`.
  *
- * Shown, never written: it stays the provider's picture until somebody chooses
- * one, so the header and the settings page agree on a face without the profile
- * row quietly filling itself in.
+ * Sign up copies it into the profile, so this only matters for an account the
+ * copy has not reached; it keeps the header and the settings page showing the
+ * same face either way.
  */
 export function providerPicture(meta: Record<string, unknown> | undefined): string | null {
   for (const field of ["avatar_url", "picture"]) {

@@ -47,10 +47,11 @@ export default async function Account() {
   const profile = db === null ? null : await profileOf(db, user.id);
 
   /*
-    What the provider told us about them, which is a suggestion and never a
-    value. Google hands over a name and a picture; both are offered as defaults
-    and neither is written to the profile behind somebody's back, because a
-    field that fills itself in is a field nobody knows they can change.
+    What the provider told us about them. The name is offered as a default and
+    never written, because a field that fills itself in is a field nobody knows
+    they can change. The picture is the exception: it is copied to the profile
+    at sign up so other people see a face, and it is replaced here like any
+    other. The fallback below covers an account from before that.
   */
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const suggestedName = pick(meta, "full_name") ?? pick(meta, "name");
