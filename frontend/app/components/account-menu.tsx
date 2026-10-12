@@ -267,7 +267,7 @@ export function AccountMenu({
                   className="flex w-full items-center gap-3 px-3.5 py-2.5 text-[1rem] text-ink transition-colors duration-150 ease-settle hover:bg-paper-sunk"
                 >
                   <Stage />
-                  <span className="flex-1 truncate">Your hackathons</span>
+                  <span className="flex-1 truncate">Management Panel</span>
                   <Chevron />
                 </Link>
               )}

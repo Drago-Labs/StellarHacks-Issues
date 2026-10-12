@@ -26,7 +26,7 @@ export default async function Manage() {
     <main className="flex-1">
       <section className="border-b border-rule">
         <Measure wide className="py-16 sm:py-20">
-          <Eyebrow>Organizer</Eyebrow>
+          <Eyebrow>Management Panel</Eyebrow>
 
           <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
             <h1 className="text-[clamp(2rem,4.5vw,3rem)]">Your hackathons</h1>

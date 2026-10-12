@@ -226,7 +226,7 @@ export function Console({
           at 600. This is the page's own title and carries more than a label
           does. */}
       <p className="text-[1.375rem] font-bold tracking-[0.1em] text-ink uppercase">
-        Hackathon management
+        Hackathon management panel
       </p>
 
       <Masthead

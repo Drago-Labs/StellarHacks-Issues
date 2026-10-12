@@ -87,7 +87,14 @@ export async function Header() {
         </a>
 
         <nav className="hidden items-center gap-1 sm:flex" aria-label="Sections">
-          {[["Hackathons", "/hackathons"], ["Statistics", "/statistics"]].map(([label, href]) => (
+          {/* Beside the two public sections for whoever may start an event, the
+              same grant the create page checks. On a phone, where this row is
+              hidden, the account menu carries the same link. */}
+          {[
+            ["Hackathons", "/hackathons"],
+            ["Statistics", "/statistics"],
+            ...(organizer ? [["Management Panel", "/manage"]] : []),
+          ].map(([label, href]) => (
             <a
               key={href}
               href={href}
