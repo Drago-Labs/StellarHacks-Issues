@@ -193,26 +193,51 @@ export async function rulesFor(contractId: string): Promise<Rules | null> {
 
   const server = new rpc.Server(rpcUrl);
 
-  const tx = new TransactionBuilder(
-    /* A throwaway account with no balance and no signature. Simulation never
-       submits, so the only thing the source has to be is well formed. */
-    new Account("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", "0"),
-    { fee: BASE_FEE, networkPassphrase: passphrase },
-  )
-    .addOperation(new Contract(contractId).call("constitution"))
-    .setTimeout(30)
-    .build();
+  async function ask(method: string): Promise<Record<string, unknown> | null> {
+    const tx = new TransactionBuilder(
+      /* A throwaway account with no balance and no signature. Simulation never
+         submits, so the only thing the source has to be is well formed. */
+      new Account("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", "0"),
+      { fee: BASE_FEE, networkPassphrase: passphrase },
+    )
+      .addOperation(new Contract(contractId).call(method))
+      .setTimeout(30)
+      .build();
 
-  const simulated = await server.simulateTransaction(tx);
+    const simulated = await server.simulateTransaction(tx);
 
-  if (rpc.Api.isSimulationError(simulated) || simulated.result === undefined) {
+    if (rpc.Api.isSimulationError(simulated) || simulated.result === undefined) {
+      return null;
+    }
+
+    return scValToNative(simulated.result.retval) as Record<string, unknown>;
+  }
+
+  const [constitution, state] = await Promise.all([
+    ask("constitution"),
+    ask("state").catch(() => null),
+  ]);
+
+  if (constitution === null) {
     /* Absent rather than a default. A hackathon whose contract could not be
        reached has unknown rules, and every surface built on this says so
        instead of drawing an empty prize table. */
     return null;
   }
 
-  return shape(scValToNative(simulated.result.retval) as Record<string, unknown>);
+  /*
+    The schedule in force rather than the one announced.
+
+    The constitution keeps the deadlines as they were frozen, and an extension
+    moves the copy in the state instead. Read from the constitution, a page went
+    on showing the old deadline after the organizer had moved it: it called
+    registration closed and hid the button while the contract was still taking
+    sign ups. The announced schedule is still what an extension is measured
+    against, and that is read where it is needed, in `lib/schedule.ts`.
+  */
+  const schedule = state?.["schedule"];
+
+  return shape(schedule === undefined ? constitution : { ...constitution, schedule });
 }
 
 /**
