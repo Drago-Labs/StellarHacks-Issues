@@ -39,12 +39,11 @@ async function pass(contract: string): Promise<number> {
   /*
     Nothing arrived, so nothing derived from it can have moved.
 
-    Below, the projection is rebuilt by reading this contract's entire log back
-    out of Postgres and writing every row it implies. That is the right shape
-    for a rebuild and it was being run on every lap, including the overwhelming
-    majority that find no new ledgers: an idle indexer downloaded the whole
-    history of every hackathon it follows, every few seconds, forever. On a free
-    tier that single line was the product's entire hosting bill.
+    The projection used to be rebuilt here on every lap, including the
+    overwhelming majority that find no new ledgers: an idle indexer downloaded
+    the whole history of every hackathon it follows, every few seconds,
+    forever. On a free tier that single line was the product's entire hosting
+    bill. It now runs from `reproject`, and only once something has landed.
 
     The cursor still moves. It records how far the chain has been scanned rather
     than how much was found, and leaving it behind would mean rescanning the
@@ -63,10 +62,30 @@ async function pass(contract: string): Promise<number> {
   // later pass would think to look for.
   await advanceTo(contract, found.through);
 
+  return found.events.length;
+}
+
+/*
+  The projection is rebuilt from the whole log, so what it costs grows with the
+  log. Run once per pass that found something, it was paid again for every page
+  RPC handed back: an indexer catching up on a busy hackathon read its entire
+  history once per page, and the total grew with the square of the event count.
+
+  So the log is written as it arrives and the projection waits until the
+  indexer has reached the head of the chain, then runs once for everything that
+  landed. A contract not seen yet by this process counts as unprojected, which
+  covers a restart between a store and the rebuild that should have followed.
+*/
+const projected = new Set<string>();
+
+/* Within a minute of the head, at five seconds a ledger. Close enough that one
+   more lap would add nothing a page could show. */
+const NEAR_THE_HEAD = 12;
+
+async function reproject(contract: string): Promise<void> {
   const log = await replayable(contract);
   await apply(project(decode(log.events), log.reads));
-
-  return found.events.length;
+  projected.add(contract);
 }
 
 async function rebuild(contract: string): Promise<void> {
@@ -119,14 +138,22 @@ async function watching(): Promise<string[]> {
 async function follow(only: string | undefined): Promise<never> {
   for (;;) {
     const contracts = only === undefined ? await watching() : [only];
-    let ingested = 0;
+    let catchingUp = false;
 
     for (const contract of contracts) {
       try {
         const found = await pass(contract);
         const behind = await health(contract);
 
-        ingested += found;
+        if (found > 0) {
+          projected.delete(contract);
+        }
+
+        if (behind.lag > NEAR_THE_HEAD) {
+          catchingUp = true;
+        } else if (!projected.has(contract)) {
+          await reproject(contract);
+        }
 
         if (behind.strandedBehindRetention) {
           // Saying this every pass is deliberate. It is the one condition
@@ -164,7 +191,11 @@ async function follow(only: string | undefined): Promise<never> {
       console.log("no hackathons to follow yet");
     }
 
-    if (ingested === 0) {
+    /* Straight on while anything is behind, so a backlog clears at the speed
+       RPC serves it. At the head, a lap a minute whether or not the last one
+       found events: that is what keeps the rebuild above to once a minute for
+       a busy hackathon instead of once per event. */
+    if (!catchingUp) {
       await new Promise((wake) => setTimeout(wake, settings.idleMs));
     }
   }
@@ -185,6 +216,7 @@ if (mode === "--rebuild" || mode === "--once") {
     await rebuild(contract);
   } else {
     const found = await pass(contract);
+    await reproject(contract);
     const behind = await health(contract);
 
     console.log(`ingested ${found} events, ${behind.lag} ledgers behind ${behind.latest}`);
