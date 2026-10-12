@@ -185,3 +185,23 @@ export function whatIsWrong(edit: ProfileEdit): string | null {
 export function nameOf(profile: Profile | null, fromProvider: string | null): string {
   return profile?.displayName ?? fromProvider ?? profile?.username ?? "Your account";
 }
+
+/**
+ * The picture the sign in provider handed over, for somebody who has not
+ * uploaded one. Google sends it as `avatar_url` and also as `picture`.
+ *
+ * Shown, never written: it stays the provider's picture until somebody chooses
+ * one, so the header and the settings page agree on a face without the profile
+ * row quietly filling itself in.
+ */
+export function providerPicture(meta: Record<string, unknown> | undefined): string | null {
+  for (const field of ["avatar_url", "picture"]) {
+    const value = meta?.[field];
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return null;
+}

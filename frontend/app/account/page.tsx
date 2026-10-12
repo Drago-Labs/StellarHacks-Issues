@@ -9,7 +9,7 @@ import { countriesByName } from "../../lib/countries";
 import { ProfileForm } from "./profile-form";
 import { SignOut } from "../components/session";
 import { currentUser, serverClient } from "../../lib/supabase/server";
-import { nameOf, profileOf, type Profile } from "../../lib/profile";
+import { nameOf, profileOf, providerPicture, type Profile } from "../../lib/profile";
 
 /**
  * Everything about the account somebody can change.
@@ -54,7 +54,7 @@ export default async function Account() {
   */
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const suggestedName = pick(meta, "full_name") ?? pick(meta, "name");
-  const suggestedAvatar = pick(meta, "avatar_url") ?? pick(meta, "picture");
+  const suggestedAvatar = providerPicture(meta);
 
   const name = nameOf(profile, suggestedName);
   const avatar = profile?.avatarUrl ?? suggestedAvatar;

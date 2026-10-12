@@ -459,6 +459,9 @@ function Avatar({ email, avatarUrl }: { email: string; avatarUrl: string | null 
         aria-hidden
         src={avatarUrl}
         alt=""
+        /* Google's picture host refuses some requests that name the page they
+           came from, and this is often a Google picture. */
+        referrerPolicy="no-referrer"
         className="size-9 shrink-0 rounded-full object-cover ring-1 ring-inset ring-rule"
       />
     );

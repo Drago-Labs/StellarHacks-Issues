@@ -3,7 +3,7 @@ import footerStyles from "./footer.module.css";
 import { AccountMenu } from "./account-menu";
 import { currentUser, serverClient } from "../../lib/supabase/server";
 import { isStaff, mayOrganize } from "../../lib/organizing";
-import { profileOf } from "../../lib/profile";
+import { profileOf, providerPicture } from "../../lib/profile";
 
 /**
  * The frame every page is read inside.
@@ -112,7 +112,10 @@ export async function Header() {
         <AccountMenu
           email={user?.email ?? null}
           username={profile?.username ?? null}
-          avatarUrl={profile?.avatarUrl ?? null}
+          avatarUrl={
+            profile?.avatarUrl ??
+            providerPicture(user?.user_metadata as Record<string, unknown> | undefined)
+          }
           organizer={organizer}
           staff={staff}
         />

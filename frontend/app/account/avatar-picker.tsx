@@ -106,6 +106,7 @@ export function AvatarPicker({
             alt=""
             width={80}
             height={80}
+            referrerPolicy="no-referrer"
             className="size-16 rounded-full object-cover ring-1 ring-rule sm:size-20"
           />
         )}
