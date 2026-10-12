@@ -276,8 +276,14 @@ export function DeckViewer({ url }: { url: string }) {
 
           go(page + (push > 0 ? 1 : -1));
         }}
-        style={{ aspectRatio: shape ?? 16 / 9 }}
-        className="relative grid max-h-[80vh] w-full place-items-center overflow-hidden rounded-[0.75rem] bg-paper-sunk ring-1 ring-inset ring-rule outline-none focus-visible:ring-2 focus-visible:ring-ink"
+        /* The frame takes the page's own shape and stops at seventy percent of
+           the window, narrowing rather than stretching: a portrait page at full
+           width was a column taller than the screen with grey on both sides. */
+        style={{
+          aspectRatio: shape ?? 16 / 9,
+          maxWidth: `calc(70vh * ${shape ?? 16 / 9})`,
+        }}
+        className="relative mx-auto grid max-h-[70vh] w-full place-items-center overflow-hidden rounded-[0.75rem] bg-paper-sunk ring-1 ring-inset ring-rule outline-none focus-visible:ring-2 focus-visible:ring-ink"
       >
         {failed ? (
           <p className="px-6 text-center text-[0.9375rem] text-ink-soft">
