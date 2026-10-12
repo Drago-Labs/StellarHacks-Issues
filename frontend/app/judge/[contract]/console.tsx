@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "../../components/primitives";
+import { Mark, Web } from "../../components/marks";
 import { SpecLabel, SpecRow, SpecRows, SpecValue } from "../../components/spec";
 import { useWallet } from "../../components/wallet-context";
 import { entriesOf, type Entry } from "../../../lib/submissions";
@@ -583,16 +584,28 @@ function Scoresheet({
           {/* Everything the team pinned, in one row. The entry's own link is
               the chain's and is always there; the rest are ours and appear
               only when the team filled them in. */}
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
-            <Visit href={entry.uri}>The entry</Visit>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {/* The project's own page here, which is the address the team
+                pinned on chain when they entered. */}
+            <Visit href={entry.uri}>Project</Visit>
 
             {card?.repositoryUrl != null && (
-              <Visit href={card.repositoryUrl}>Code</Visit>
+              <Visit href={card.repositoryUrl} icon={<Mark where="github" />}>
+                GitHub
+              </Visit>
             )}
 
-            {card?.liveUrl != null && <Visit href={card.liveUrl}>Live</Visit>}
+            {card?.liveUrl != null && (
+              <Visit href={card.liveUrl} icon={<Web />}>
+                Live
+              </Visit>
+            )}
 
-            {card?.demoVideoUrl != null && <Visit href={card.demoVideoUrl}>Demo</Visit>}
+            {card?.demoVideoUrl != null && (
+              <Visit href={card.demoVideoUrl} icon={<Mark where="youtube" />}>
+                Demo
+              </Visit>
+            )}
           </div>
         </div>
 
@@ -843,14 +856,23 @@ function Kept({ contractId, held }: { contractId: string; held: SealedCard }) {
 }
 
 /** Somewhere the team pinned something, opened where it will not lose the form. */
-function Visit({ href, children }: { href: string; children: React.ReactNode }) {
+function Visit({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="label text-ink-soft underline decoration-rule underline-offset-4 transition-colors hover:text-ink"
+      className="inline-flex h-9 items-center gap-2 rounded-full px-3.5 text-[0.875rem] font-semibold text-ink ring-1 ring-inset ring-rule transition-colors duration-150 ease-settle hover:bg-paper-sunk"
     >
+      {icon}
       {children}
     </a>
   );
