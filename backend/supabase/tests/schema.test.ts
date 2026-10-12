@@ -141,7 +141,7 @@ describe("the sealed tables", () => {
       admin.from("ballots").insert({
         contract_id: event.contract,
         voter: someAddress(),
-        team_id: event.team,
+        choices: [{ team: event.team, weight: 10 }],
         leaf: "\\xcc",
         signature: "\\xdd",
       }),
@@ -182,7 +182,7 @@ describe("the sealed tables", () => {
     const { error } = await memberUser.client.from("ballots").insert({
       contract_id: event.contract,
       voter: someAddress(),
-      team_id: event.team,
+      choices: [{ team: event.team, weight: 10 }],
       leaf: "\\xee",
       signature: "\\xff",
     });
