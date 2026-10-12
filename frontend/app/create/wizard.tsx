@@ -827,7 +827,6 @@ export function Wizard({
             value={tagline}
             onChange={setTagline}
             placeholder="Build payments that settle in five seconds"
-            note="Shown under the name on the listing. The full description is written later."
           />
 
           <TagField value={tags} onChange={setTags} />
@@ -858,7 +857,6 @@ export function Wizard({
       <Section
         index={2}
         title="Prize currency"
-        note="Which token winners are paid in. Both run on the Stellar network. Prizes are written in dollars below and converted to this token at the rate on the day you create the event."
       >
         <div className="flex flex-wrap gap-3">
           {PRIZE_ASSETS.map((choice) => {
@@ -915,14 +913,6 @@ export function Wizard({
                 <p className="text-[0.9375rem] leading-relaxed text-ink">
                   1 XLM is ${rate.toFixed(4)} right now.
                 </p>
-
-                <p className="mt-1.5 text-[0.875rem] leading-relaxed text-ink-soft">
-                  Prizes are converted at this rate and the lumen amount is what
-                  gets frozen into the rules. If the price moves afterwards the
-                  number of lumens paid does not change, so the dollar value a
-                  winner receives will differ from the figure you typed. USDC
-                  holds its dollar value and avoids this.
-                </p>
               </>
             )}
           </div>
@@ -932,7 +922,6 @@ export function Wizard({
       <Section
         index={3}
         title="Tracks and prizes"
-        note="A track is one category projects compete in, with its own prize money and its own scoring. Most events need only one. Give it a short name, say what each place wins, and list what judges score on."
       >
         <div className="space-y-10">
           {tracks.map((track, index) => (
@@ -1026,12 +1015,6 @@ export function Wizard({
               </span>
             </label>
           )}
-
-          <p className="mt-4 max-w-[42rem] text-[0.875rem] leading-relaxed text-ink-faint">
-            {communityBps === 0
-              ? "The judges' scorecards are the whole result."
-              : "The vote runs alongside judging: it opens when the entry check ends and closes when judging does, so the crowd votes on the same entries the judges score. Only approved participants can vote, and the ballots stay sealed until the reveal."}
-          </p>
         </div>
 
         {/*
@@ -1061,7 +1044,6 @@ export function Wizard({
                   value={judge}
                   onChange={(next) => setJudges(judges.map((j, i) => (i === index ? next : j)))}
                   placeholder="G…"
-                  note="Starts with G, 56 characters"
                   mono
                 />
               </div>
@@ -1109,40 +1091,34 @@ export function Wizard({
       <Section
         index={5}
         title="Schedule"
-        note="Five moments, in your own timezone, each one after the one before it."
       >
         <div className="border-t border-rule">
           <Moment
             label="Opens"
-            hint="Sign up and building both start"
             value={dates.opens}
             onChange={(v) => setDates({ ...dates, opens: v })}
           />
 
           <Moment
             label="Registration closes"
-            hint="Last moment to sign up"
             value={dates.registrationCloses}
             onChange={(v) => setDates({ ...dates, registrationCloses: v })}
           />
 
           <Moment
             label="Submissions close"
-            hint="The build deadline"
             value={dates.submissionCloses}
             onChange={(v) => setDates({ ...dates, submissionCloses: v })}
           />
 
           <Moment
             label="Entry check ends"
-            hint="By when you will have checked the entries are eligible"
             value={dates.screeningCloses}
             onChange={(v) => setDates({ ...dates, screeningCloses: v })}
           />
 
           <Moment
             label="Judging ends"
-            hint="Last moment for judges to score"
             value={dates.judgingCloses}
             onChange={(v) => setDates({ ...dates, judgingCloses: v })}
           />
@@ -1179,16 +1155,6 @@ export function Wizard({
                 onChoose={() => setOpenRegistration(false)}
               />
             </div>
-
-            {/* The cost of the second one, said in signatures rather than in
-                principle. It is the difference between a hackathon that runs
-                itself and an afternoon of approving people one at a time, and
-                an organizer choosing it should know which they picked. */}
-            <p className="mt-4 text-[0.875rem] leading-relaxed text-ink-faint">
-              Approving each person is one signature each. Either way this is
-              frozen with the rules, so you cannot close the door after seeing
-              who applied, or open it once the voting starts.
-            </p>
           </div>
 
           <div className="border-b border-rule py-4">
@@ -1213,14 +1179,6 @@ export function Wizard({
                 onChoose={() => setVisibility(2)}
               />
             </div>
-
-            <p className="mt-4 text-[0.875rem] leading-relaxed text-ink-faint">
-              {visibility === 0
-                ? "The gallery helps the hackathon advertise itself and can be opened without signing in."
-                : visibility === 1
-                  ? "A reader must sign in, link the approved Stellar wallet and belong to this event."
-                  : "Participants cannot open project write-ups. After signing in and linking their named wallet, the organizer and judges still can."}
-            </p>
 
             {visibilityConflictsWithVote && (
               <p className="mt-3 text-[0.875rem] leading-relaxed text-broken">
@@ -1294,17 +1252,6 @@ export function Wizard({
                 onChange={(next) => setRequires({ ...requires, deployedContract: next })}
               />
             </div>
-
-            {/* What the middle answer costs is worth saying, because it is the
-                one that looks free. Not asked takes the field off their form
-                entirely, which is the point: a judge opening a design entry
-                should not read an empty repository row as a team that never
-                pushed anything. */}
-            <p className="mt-4 text-[0.875rem] leading-relaxed text-ink-faint">
-              Required means an entry without it is incomplete. Optional means
-              a team may send one. Not asked leaves the field off their form
-              altogether.
-            </p>
           </div>
 
           {/* A duration rather than a moment, because it is counted from the
@@ -1497,11 +1444,6 @@ function TrackForm({
                back as "Defi" — small, but it is the sort of thing somebody
                should find out here rather than on their own event page after
                the rules are frozen. */
-            note={
-              symbolOf(track.id).length > 0
-                ? `It appears on every project entered here. The chain will call it ${symbolOf(track.id)}.`
-                : "It appears on every project entered here. Capitals and spaces are yours; the chain keeps one lowercase word."
-            }
           />
         </div>
 
@@ -1511,12 +1453,6 @@ function TrackForm({
       <div className="mt-6 grid gap-8 lg:grid-cols-2">
         <div>
           <p className="label text-[0.875rem] text-ink">Prizes</p>
-
-          {/* Where the money is typed, which was the one thing the currency
-              card three sections up could not say for itself. */}
-          <p className="mt-1 text-[0.875rem] leading-relaxed text-ink-faint">
-            What each place wins, in {inTokens ? (code.length > 0 ? code : "the prize token") : "dollars"}
-          </p>
 
           <div className="mt-3 space-y-2">
             {track.prizes.map((prize, at) => {
@@ -1619,11 +1555,6 @@ function TrackForm({
             </p>
           </div>
 
-          <p className="mt-1 text-[0.875rem] leading-relaxed text-ink-faint">
-            What judges mark each project on, and how much each one counts. They
-            have to add up to 100.
-          </p>
-
           <div className="mt-3 space-y-2">
             {track.criteria.map((criterion, at) => (
               <div key={at} className="flex items-center gap-3">
@@ -1721,15 +1652,12 @@ function TrackForm({
 function Section({
   index,
   title,
-  note,
   children,
 }: {
   /* A plain number rather than a zero padded string. "01" is a catalogue
      reference; there are five of these and nobody is looking one up. */
   index: number;
   title: string;
-  /** What the section is asking for, when the fields alone do not say. */
-  note?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -1741,10 +1669,6 @@ function Section({
 
         <h2 className="text-[1.5rem] text-ink">{title}</h2>
       </div>
-
-      {note !== undefined && (
-        <p className="mt-3 max-w-[42rem] text-[1rem] leading-relaxed text-ink-soft">{note}</p>
-      )}
 
       <div className="mt-8">{children}</div>
     </section>
@@ -1763,14 +1687,12 @@ function Field({
   value,
   onChange,
   placeholder,
-  note,
   mono = false,
 }: {
   label: string;
   value: string;
   onChange: (next: string) => void;
   placeholder: string;
-  note?: string;
   mono?: boolean;
 }) {
   return (
@@ -1794,10 +1716,6 @@ function Field({
           mono ? "tabular text-[0.9375rem]" : ""
         }`}
       />
-
-      {note !== undefined && (
-        <span className="text-[0.875rem] leading-relaxed text-ink-faint">{note}</span>
-      )}
     </label>
   );
 }
@@ -1812,22 +1730,16 @@ function Field({
  */
 function Moment({
   label,
-  hint,
   value,
   onChange,
 }: {
   label: string;
-  hint: string;
   value: string;
   onChange: (next: string) => void;
 }) {
   return (
     <label className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-rule py-4">
-      <span className="grid gap-0.5">
-        <span className="label text-[0.875rem] text-ink">{label}</span>
-
-        <span className="text-[0.875rem] text-ink-faint">{hint}</span>
-      </span>
+      <span className="label text-[0.875rem] text-ink">{label}</span>
 
       <input
         type="datetime-local"
