@@ -48,7 +48,7 @@ async function lap(): Promise<void> {
     try {
       for (const done of await advance(contract)) {
         if (done.sent) {
-          console.log(`${contract}: ${done.call}`);
+          console.log(`${contract}: ${done.call}${done.what === undefined ? "" : ` ${done.what}`}`);
         } else if (!done.expected) {
           /* An expected refusal is most laps of most hackathons and saying so
              would bury the one line that matters under a running commentary on

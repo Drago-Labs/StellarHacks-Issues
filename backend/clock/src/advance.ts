@@ -4,6 +4,7 @@ import { HackathonCore } from "@stelhacks/sdk";
 
 import { settings } from "./config.js";
 import { CALLS, named, nothingToDo, refusal, type Call } from "./due.js";
+import { payOut, type Paid } from "./payout.js";
 
 /**
  * One hackathon, one lap.
@@ -17,7 +18,7 @@ import { CALLS, named, nothingToDo, refusal, type Call } from "./due.js";
 const clock = Keypair.fromSecret(settings.clockSecret);
 
 export type Done =
-  | { sent: true; call: Call }
+  | { sent: true; call: Call | Paid["call"]; what?: string }
   | { sent: false; call: Call; because: string; expected: boolean };
 
 /** The phase whose exit has a precondition nothing on chain enforces. */
@@ -52,6 +53,15 @@ export async function advance(contract: string): Promise<Done[]> {
   const done: Done[] = [];
 
   for (const call of CALLS) {
+    /* The money goes out between settlement opening and the event closing, so
+       a hackathon whose window ran out this lap is paid this lap too, and the
+       close that follows sees every position settled. */
+    if (call === "complete") {
+      for (const paid of await payOut(core, contract)) {
+        done.push({ sent: true, call: paid.call, what: paid.what });
+      }
+    }
+
     const built = await core[call]();
     const simulation = built.simulation;
 
