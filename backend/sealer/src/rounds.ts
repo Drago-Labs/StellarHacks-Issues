@@ -106,6 +106,19 @@ async function put(built: { simulation?: unknown; signAndSend: () => Promise<unk
   return null;
 }
 
+/*
+  When a reveal last failed, per hackathon.
+
+  The reveal reads every held scorecard in full, ciphertext and all, and a pass
+  that fails is retried on the next lap. One entry the contract keeps refusing,
+  or a drand node that will not answer, then reads the whole table every two
+  minutes for as long as nobody notices: at a hundred cards that is most of a
+  free tier's monthly egress in a month. Half an hour between attempts still
+  ranks a recovered event within the hour and costs a fifteenth as much.
+*/
+const failedAt = new Map<string, number>();
+const RETRY_AFTER_MS = 30 * 60_000;
+
 /** One hackathon, one round. */
 export async function round(contract: string): Promise<string[]> {
   const client = core(contract);
@@ -125,6 +138,37 @@ export async function round(contract: string): Promise<string[]> {
     return [];
   }
 
+  if (at === REVEAL && Date.now() - (failedAt.get(contract) ?? 0) < RETRY_AFTER_MS) {
+    return [];
+  }
+
+  try {
+    const said = await work(client, contract, at);
+
+    if (at === REVEAL) {
+      if (said.length > 0) {
+        failedAt.set(contract, Date.now());
+      } else {
+        failedAt.delete(contract);
+      }
+    }
+
+    return said;
+  } catch (thrown) {
+    if (at === REVEAL) {
+      failedAt.set(contract, Date.now());
+    }
+
+    throw thrown;
+  }
+}
+
+/** The work of one round, for a hackathon already known to be in Judging or Reveal. */
+async function work(
+  client: ReturnType<typeof core>,
+  contract: string,
+  at: number,
+): Promise<string[]> {
   const said: string[] = [];
 
   if (at === JUDGING) {
